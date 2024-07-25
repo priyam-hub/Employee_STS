@@ -1,17 +1,28 @@
 package com.priyam.demo.service;
 
+import java.time.LocalDate;
+//import java.awt.print.Pageable;
 import java.util.*;
 import java.util.stream.Collectors;
 
+//import org.hibernate.query.Page;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+//import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.PathVariable;
 
 import com.priyam.demo.dto.EmployeeDTO;
+import com.priyam.demo.dto.SearchCriteria;
 import com.priyam.demo.entity.Employee;
 import com.priyam.demo.entity.EmployeeContact;
 import com.priyam.demo.repository.EmployeeContactRepository;
 import com.priyam.demo.repository.EmployeeRepository;
+import com.priyam.demo.specification.EmployeeSpecification;
 
 @Service
 public class EmployeeService {
@@ -68,6 +79,34 @@ public class EmployeeService {
             .map(e -> new EmployeeDTO(e.getEmployeeCode(), e.getFirstName() + " " + e.getLastName()))
             .collect(Collectors.toList());
     }
-	
-
+    
+    public Optional<Employee> findEmployeeByEmail(String email) {
+        return employeeRepository.findByEmail(email);
+    }
+    
+    public Page<Employee> getEmployeesWithPagination(int page, int size) {
+        return employeeRepository.findAll(PageRequest.of(page, size));
+    }
+    
+    public List<Employee> searchEmployees(String employeeCode, String firstName, Boolean isActive, LocalDate dateOfBirth) {
+        Specification<Employee> spec = Specification.where(EmployeeSpecification.hasEmployeeCode(employeeCode))
+            .and(EmployeeSpecification.hasFirstName(firstName))
+            .and(EmployeeSpecification.isActive(isActive))
+            .and(EmployeeSpecification.hasDateOfBirth(dateOfBirth));
+        
+        return employeeRepository.findAll(spec);
+    }
+    
+    public Page<Employee> searchEmployees(SearchCriteria searchCriteria) {
+        Specification<Employee> spec = Specification.where(EmployeeSpecification.hasEmployeeCode(searchCriteria.getEmployeeCode()))
+            .and(EmployeeSpecification.hasFirstName(searchCriteria.getFirstName()))
+            .and(EmployeeSpecification.isActive(searchCriteria.getIsActive()))
+            .and(EmployeeSpecification.hasDateOfBirth(searchCriteria.getDateOfBirth()));
+        
+        Sort sort = Sort.by(Sort.Direction.fromString(searchCriteria.getSortDirection()), searchCriteria.getSortProperty());
+        Pageable pageable = PageRequest.of(searchCriteria.getPage(), searchCriteria.getSize(), sort);
+        return employeeRepository.findAll(spec, pageable);
+    }
+    
+    
 }

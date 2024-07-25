@@ -40,6 +40,9 @@ public class Employee {
     
     @Column(name = "dob")
     private LocalDate dateOfBirth;
+    
+ // New field to indicate if the employee is active
+    private boolean isActive;
 
 	public LocalDate getDateOfBirth() {
 		return dateOfBirth;
@@ -93,8 +96,12 @@ public class Employee {
 		this.contacts = contacts;
 	}
 
-	
+	public boolean isActive() {
+		return isActive;
+	}
 
-    
+	public void setActive(boolean isActive) {
+		this.isActive = isActive;
+	}    
 
 }
